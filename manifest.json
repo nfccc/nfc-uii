@@ -1,0 +1,16 @@
+{
+    "name": "ktrade",
+    "short_name": "App",
+    "start_url": ".",
+    "display": "fullscreen",
+    "background_color": "#ffffff",
+    "theme_color": "#000000",
+    "icons": [
+      {
+        "src": "/path/to/icon.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      }
+    ]
+  }
+  
