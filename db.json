@@ -1,0 +1,39 @@
+{
+  "allStudents": [
+    {
+      "id": "96cc",
+      "studentName": "Harnek",
+      "uidNumber": "112233",
+      "parentContact": "+254703626374",
+      "parentEmail": "harneksign@gmail.com",
+      "class": "Class 2"
+    },
+    {
+      "id": "ab73",
+      "studentName": "Harnek",
+      "uidNumber": "112233",
+      "parentContact": "+254703626374",
+      "parentEmail": "harnek@gmail.com",
+      "class": "Class 1",
+      "dateRegistered": "2024-10-25"
+    },
+    {
+      "id": "ca62",
+      "studentName": "Harnek",
+      "uidNumber": "112233",
+      "parentContact": "+254703626374",
+      "parentEmail": "j@gmail.com",
+      "class": "Class 3",
+      "dateRegistered": "2024-10-25"
+    },
+    {
+      "id": "c3ea",
+      "studentName": "Mr Wang",
+      "uidNumber": "222",
+      "parentContact": "+254703626374",
+      "parentEmail": "harneksign@gmail.com",
+      "class": "Class 7",
+      "dateRegistered": "2024-10-25"
+    }
+  ]
+}

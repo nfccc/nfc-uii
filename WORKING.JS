@@ -1,4 +1,62 @@
-'use client'
+const onSubmit = async (data) => {
+  const studentData = {
+    student_name: data.studentName,
+    uid_number: data.uidNumber,
+    parent_contact: data.parentContact,
+    parent_email: data.parentEmail,
+    student_class: data.class,
+  };
+
+  try {
+    const response = await fetch('https://nfc-3fdg.onrender.com/students/add/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(studentData),
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log("Student added:", result);
+      alert("Student added successfully!");
+      form.reset(); // Reset form after submission
+    } else {
+      console.error("Failed to add student:", response.statusText);
+    }
+  } catch (error) {
+    console.error("Error adding student:", error);
+  }
+};
+
+
+
+
+
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await fetch('https://nfc-3fdg.onrender.com/students/all/');
+        if (response.ok) {
+          const data = await response.json();
+          setStudents(data.students);  // Only set the `students` array in state
+        } else {
+          console.error("Failed to fetch students:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching students:", error);
+      }
+    };
+  
+    fetchStudents();
+  }, []);
+
+
+
+
+
+  'use client'
 import { useState, useEffect } from 'react';
 import React from 'react'
 import Image from "next/image"
@@ -121,7 +179,6 @@ const FormSchema = z.object({
 })
 
 
-  
 // Function to fetch students by class from the backend
 const fetchStudentsByClass = async (classValue) => {
   try {
@@ -139,67 +196,147 @@ const fetchStudentsByClass = async (classValue) => {
   }
 };
 
-const Management = () => {
-  const [allStudents, setAllStudents] = useState([]); // Separate state for "All" students
-  const [classStudents, setClassStudents] = useState([]); // Separate state for class-specific students
-  const [classFilter, setClassFilter] = useState('All'); // Track selected class filter
-  const [totalStudents, setTotalStudents] = useState(0);
+// Component to display each class with its students
+const ClassTable = ({ classValue, students }) => (
+  <TabsContent value={classValue}>
+    <Card x-chunk="dashboard-05-chunk-3">
+      <CardHeader className="px-7">
+        <CardTitle>{classValue === "week" ? "All Students" : `Class ${classValue}`} Students</CardTitle>
+        <CardDescription>Total Students: {students.length}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Student Name</TableHead>
+              <TableHead className="hidden md:table-cell">UID</TableHead>
+              <TableHead className="hidden md:table-cell">Parent Number</TableHead>
+              <TableHead className="hidden md:table-cell">Parent Email</TableHead>
+              <TableHead className="hidden md:table-cell">Date Registered</TableHead>
+              <TableHead>
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {students.map((student) => (
+              <TableRow key={student.id}>
+                <TableCell>
+                  <div className="font-medium">{student.student_name}</div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">{student.uid_number}</TableCell>
+                <TableCell className="hidden md:table-cell">{student.parent_contact}</TableCell>
+                <TableCell className="hidden md:table-cell">{student.parent_email}</TableCell>
+                <TableCell className="hidden md:table-cell">{student.date_registered || "N/A"}</TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Toggle menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => handleEdit(student)}>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDelete(student.id)}>Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  </TabsContent>
+);
+  
 
-  // Fetch all students only once when the component mounts
+const Management = () => {
+  const [students, setStudents] = useState([]);
+  const [editStudent, setEditStudent] = useState(null); // Track the student being edited
+  const [studentsByClass, setStudentsByClass] = useState({});
+  const [selectedClass, setSelectedClass] = useState("week");
+
   useEffect(() => {
-    const fetchAllStudents = async () => {
+    const fetchAllClasses = async () => {
+      const newStudentsByClass = {};
+      for (let i = 1; i <= 7; i++) {  // Fetch data for Class 1 to Class 7
+        const students = await fetchStudentsByClass(i);
+        newStudentsByClass[i] = students;
+      }
+      setStudentsByClass(newStudentsByClass);
+    };
+
+    fetchAllClasses();
+  }, []);
+
+  // Prepare students to display based on selected class
+  const studentsToDisplay = selectedClass === "week"
+    ? Object.values(studentsByClass).flat()  // Combine students from all classes for "All Students"
+    : studentsByClass[selectedClass] || [];  // Display students of the selected class
+
+
+
+
+
+  const handleEdit = (student) => {
+    setEditStudent(student);
+    setIsEditOpen(true);
+  };
+
+  const handleDelete = async (studentId) => {
+    try {
+      await fetch(`http://localhost:3001/allStudents/${studentId}`, {
+        method: 'DELETE',
+      });
+      setStudents(students.filter((student) => student.id !== studentId));
+    } catch (error) {
+      console.error("Error deleting student:", error);
+    }
+  };
+
+  const handleEditSubmit = async (data) => {
+    try {
+      await fetch(`http://localhost:3001/allStudents/${editStudent.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      setStudents(
+        students.map((student) =>
+          student.id === editStudent.id ? { ...student, ...data } : student
+        )
+      );
+      setIsEditOpen(false);
+      setEditStudent(null);
+    } catch (error) {
+      console.error("Error updating student:", error);
+    }
+  };
+
+
+  useEffect(() => {
+    const fetchStudents = async () => {
       try {
         const response = await fetch('https://nfc-3fdg.onrender.com/students/all/');
         if (response.ok) {
           const data = await response.json();
-          setAllStudents(data.students);
-          setTotalStudents(data.total_students);
+          setStudents(data.students);  // Only set the `students` array in state
         } else {
-          console.error("Failed to fetch all students:", response.statusText);
+          console.error("Failed to fetch students:", response.statusText);
         }
       } catch (error) {
-        console.error("Error fetching all students:", error);
+        console.error("Error fetching students:", error);
       }
     };
-
-    fetchAllStudents();
+  
+    fetchStudents();
   }, []);
-
-  // Fetch students by class whenever classFilter changes to a specific class
-// Fetch students by class whenever classFilter changes to a specific class
-useEffect(() => {
-  if (classFilter === 'All') {
-    setClassStudents([]); // Clear class-specific data when showing "All"
-    return;
-  }
-
-  const fetchStudentsByClass = async () => {
-    try {
-      const url = `https://nfc-3fdg.onrender.com/students/class/${classFilter}/`; // Use classFilter directly as a number
-      
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
-        setClassStudents(data.students);
-        setTotalStudents(data.total_students);
-      } else {
-        console.error(`Failed to fetch students for class ${classFilter}:`, response.statusText);
-      }
-    } catch (error) {
-      console.error(`Error fetching students for class ${classFilter}:`, error);
-    }
-  };
-
-  fetchStudentsByClass();
-}, [classFilter]);
-
-
   
-  
-  
-
-  // Determine which data to display based on classFilter
-  const displayedStudents = classFilter === 'All' ? allStudents : classStudents;
 
 
 
@@ -242,6 +379,9 @@ const onSubmit = async (data) => {
 
 
 
+
+
+
   return (
     <div className='mt-10'>  
       
@@ -257,7 +397,7 @@ const onSubmit = async (data) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-      <div className="text-4xl font-bold">{allStudents.length}</div>
+        <div className="text-4xl font-bold">{students.length}</div>
       </CardContent>
       <CardFooter>
         <Dialog>
@@ -342,6 +482,10 @@ const onSubmit = async (data) => {
                           <SelectItem value="Class 2">Class 2</SelectItem>
                           <SelectItem value="Class 3">Class 3</SelectItem>
                           <SelectItem value="Class 4">Class 4</SelectItem>
+                          <SelectItem value="Class 5">Class 5</SelectItem>
+                          <SelectItem value="Class 6">Class 6</SelectItem>
+                          <SelectItem value="Class 7">Class 7</SelectItem>
+
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -391,17 +535,25 @@ const onSubmit = async (data) => {
 
 </div>
 
-      <Tabs defaultValue="All">
+      <Tabs defaultValue="week">
         <div className="flex items-center">
-        <TabsList>
-  <TabsTrigger value="All" onClick={() => setClassFilter('All')}>All Students</TabsTrigger>
-  {[...Array(7)].map((_, i) => (
-    <TabsTrigger key={i} value={`${i + 1}`} onClick={() => setClassFilter(i + 1)}>
-      Class {i + 1}
-    </TabsTrigger>
-  ))}
-</TabsList>
+          <TabsList>
+            <TabsTrigger value="week">All Students</TabsTrigger>
+            <TabsTrigger value="1">Class 1 </TabsTrigger>
+            <TabsTrigger value="2">Class 2 </TabsTrigger>
+            <TabsTrigger value="3">Class 3 </TabsTrigger>
+            <TabsTrigger value="4">Class 4 </TabsTrigger>
+            <TabsTrigger value="5">Class 5 </TabsTrigger>
+            <TabsTrigger value="6">Class 6 </TabsTrigger>
+            <TabsTrigger value="7">Class 7 </TabsTrigger>
 
+
+
+
+    
+
+           
+          </TabsList>
           <div className="ml-auto flex items-center gap-2">
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -453,87 +605,64 @@ const onSubmit = async (data) => {
 
 
 
-        <TabsContent value="All">
-        <Card>
-          <CardHeader className="px-7">
-            <CardTitle>All Students</CardTitle>
-            <CardDescription>All School students</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead className="hidden md:table-cell">Date Registered</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {allStudents?.map((student, index) => (
-                  <TableRow key={student.id || index}>
-                    <TableCell>
-                      <div className="font-medium">{student.student_name}</div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {student.date_registered || "N/A"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {[...Array(7)].map((_, i) => (
-  <TabsContent key={i} value={`${i + 1}`}>
-    <Card>
-      <CardHeader className="px-7">
-        <CardTitle>Class {i + 1} Students</CardTitle>
-        <CardDescription>Total Students: {totalStudents}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Student Name</TableHead>
-              <TableHead className="hidden md:table-cell">UID</TableHead>
-              <TableHead className="hidden md:table-cell">Parent Number</TableHead>
-              <TableHead className="hidden md:table-cell">Parent Email</TableHead>
-              <TableHead className="hidden md:table-cell">Date Registered</TableHead>
-              <TableHead><span className="sr-only">Actions</span></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {classStudents?.map((student, index) => (
-              <TableRow key={student.id || index}>
-                <TableCell><div className="font-medium">{student.student_name}</div></TableCell>
-                <TableCell className="hidden md:table-cell">{student.uid_number}</TableCell>
-                <TableCell className="hidden md:table-cell">{student.parent_contact}</TableCell>
-                <TableCell className="hidden md:table-cell">{student.parent_email}</TableCell>
-                <TableCell className="hidden md:table-cell">{student.date_registered || "N/A"}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Delete</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+        <TabsContent value="week">
+      <Card x-chunk="dashboard-05-chunk-3">
+        <CardHeader className="px-7">
+          <CardTitle>All Students</CardTitle>
+          <CardDescription>All School students</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Student Name</TableHead>
+                <TableHead className="hidden md:table-cell">Date Registered</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  </TabsContent>
+            </TableHeader>
+            <TableBody>
+            {students?.map((student, index) => (
+  <TableRow key={student.id || index}>
+    <TableCell>
+      <div className="font-medium">{student.student_name}</div>
+    </TableCell>
+    <TableCell className="hidden md:table-cell">
+      {student.date_registered || "N/A"}
+    </TableCell>
+  </TableRow>
 ))}
+
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </TabsContent>
+
+
+    <Tabs defaultValue="week" onValueChange={(value) => setSelectedClass(value)}>
+      {/* <TabsList>
+        <TabsTrigger value="week">All Students</TabsTrigger>
+        <TabsTrigger value="1">Class 1</TabsTrigger>
+        <TabsTrigger value="2">Class 2</TabsTrigger>
+        <TabsTrigger value="3">Class 3</TabsTrigger>
+        <TabsTrigger value="4">Class 4</TabsTrigger>
+        <TabsTrigger value="5">Class 5</TabsTrigger>
+        <TabsTrigger value="6">Class 6</TabsTrigger>
+        <TabsTrigger value="7">Class 7</TabsTrigger>
+      </TabsList> */}
+
+      {/* Render the students for the selected class */}
+      {selectedClass === "week" ? (
+        <ClassTable
+          classValue="week"
+          students={studentsToDisplay}  // Display all students when "All Students" tab is selected
+        />
+      ) : (
+        <ClassTable
+          classValue={selectedClass}
+          students={studentsToDisplay}  // Display students for the specific class
+        />
+      )}
+    </Tabs>
 
 
 
