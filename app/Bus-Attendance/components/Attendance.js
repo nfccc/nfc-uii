@@ -1,6 +1,8 @@
 'use client'
 // import { Badge } from "@/components/ui/badge";
-import React from 'react'
+import React, { useState, useEffect } from "react"
+import { formatInTimeZone } from "date-fns-tz"
+
 import Image from "next/image"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
@@ -107,38 +109,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { DatePicker } from '@/app/Class-Attendance/components/DatePicker'
-
-// import {  ChevronRight, Copy, CreditCard, File, Home, LineChart, ListFilter, MoreVertical, Package, Package2, PanelLeft, Search, Settings, ShoppingCart, Sidebar, Truck, Users2 } from "lucide-react";
+import { DatePicker } from './DatePicker'
 
 
-// Define schema for form validation using zod
-const FormSchema = z.object({
-  studentName: z.string().min(1, "Student name is required"),
-  uidNumber: z.string().min(1, "UID number is required"),
-  parentContact: z.string().min(10, "Parent contact must be at least 10 characters"),
-  parentEmail: z.string().email("Please enter a valid email"),
-  class: z.string().min(1, "Class is required"),
-})
 
 
   
 
 const Management = () => {
-  const form = useForm({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
-      studentName: "",
-      uidNumber: "",
-      parentContact: "",
-      parentEmail: "",
-      class: "",
-    },
-  })
+  const timeZone = "Africa/Nairobi"
 
-  function onSubmit(data) {
-    console.log(data) // Handle form submission
+  
+  const buses = [
+    { id: "1", bus_id: "PB", name: "P1 Bus" },
+    { id: "2", bus_id: "MB", name: "Muthaiga Bus" },
+    { id: "3", bus_id: "LB", name: "Lavington Bus" },
+    { id: "4", bus_id: "SB", name: "SSD Bus" },
+    { id: "5", bus_id: "KB", name: "Karen Bus" },
+  ]
+
+  const [date, setDate] = useState(null) // State to hold the selected date
+  const [busId, setBusId] = useState(buses[0].bus_id) // Default bus ID (P1 Bus as default)
+  const [attendanceData, setAttendanceData] = useState(null)
+
+  // Fetch attendance data when date or busId changes
+  useEffect(() => {
+    if (date && busId) {
+      // Format date in Nairobi time zone to avoid shifts
+      const formattedDate = formatInTimeZone(date, timeZone, "yyyy-MM-dd")
+      fetchAttendance(formattedDate, busId)
+    }
+  }, [date, busId])
+
+  const fetchAttendance = async (formattedDate, selectedBusId) => {
+    try {
+      const response = await fetch(`https://nfc-3fdg.onrender.com/bus/bus-attendance/${selectedBusId}/?date=${formattedDate}`)
+      const data = await response.json()
+      setAttendanceData(data)
+    } catch (error) {
+      console.error("Error fetching attendance data:", error)
+    }
   }
+
+  
   return (
     <div className='mt-10'>  
       
@@ -213,33 +226,30 @@ const Management = () => {
 
 
 
-      <Tabs defaultValue="1">
+      {/* Tabs for selecting the bus */}
+      <Tabs defaultValue={buses[0].id} onValueChange={(value) => {
+        const selectedBus = buses.find(bus => bus.id === value)
+        if (selectedBus) setBusId(selectedBus.bus_id)
+      }}>
         <div className="flex items-center">
           <TabsList>
-          
-            <TabsTrigger value="1">P1 Bus</TabsTrigger>
-            <TabsTrigger value="2">Muthaiga Bus</TabsTrigger>
-            <TabsTrigger value="3">Lavington Bus</TabsTrigger>
-            <TabsTrigger value="4">SSD Bus</TabsTrigger>
-            <TabsTrigger value="5">Karen Bus</TabsTrigger>
-            
-
-
-
-
-    
-
-           
+            {buses.map((bus) => (
+              <TabsTrigger key={bus.id} value={bus.id}>
+                {bus.name}
+              </TabsTrigger>
+            ))}
           </TabsList>
+          
+          {/* Search and Filter Options */}
           <div className="ml-auto flex items-center gap-2">
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-            />
-          </div>
+            <div className="relative ml-auto flex-1 md:grow-0">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search..."
+                className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
+              />
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -276,314 +286,53 @@ const Management = () => {
           </div>
         </div>
 
-
-
-
-
-
-
-        <TabsContent value="1">
-  <Card x-chunk="dashboard-05-chunk-3">
-    <CardHeader className="px-7">
-      <CardTitle>Bus Attendance</CardTitle>
-      <CardDescription>
-        Total Riders: 306
-      </CardDescription>
-    </CardHeader>
-    <CardContent>
-
-      <DatePicker />
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Rider Name</TableHead>
-            <TableHead className="hidden md:table-cell">UID Number</TableHead>
-            <TableHead className="hidden md:table-cell">Date</TableHead>
-            <TableHead className="hidden md:table-cell">Attendance Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {/* Sample Bus Attendance Data with random UIDs */}
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Liam Johnson</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID23856</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-23</TableCell>
-            <TableCell className="hidden md:table-cell">
-              <Badge className='bg-green-500'>Present</Badge>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Olivia Smith</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID58934</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-24</TableCell>
-            <TableCell className="hidden md:table-cell">
-              <Badge className='bg-green-500'>Present</Badge>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Noah Williams</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID34891</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-25</TableCell>
-            <TableCell className="hidden md:table-cell">
-              <Badge className='bg-green-500'>Present</Badge>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Emma Brown</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID67239</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-26</TableCell>
-            <TableCell className="hidden md:table-cell">
-              <Badge className='bg-green-500'>Present</Badge>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Chris Johnson</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID92345</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-27</TableCell>
-            <TableCell className="hidden md:table-cell">
-              <Badge variant="destructive">Absent</Badge>
-            </TableCell>
-          </TableRow>
-          {/* Additional entries with random UIDs */}
-          {Array(6).fill().map((_, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <div className="font-medium">Chris Johnson</div>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">UID{Math.floor(10000 + Math.random() * 90000)}</TableCell>
-              <TableCell className="hidden md:table-cell">2023-06-27</TableCell>
-              <TableCell className="hidden md:table-cell">
-                <Badge variant="destructive">Absent</Badge>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </CardContent>
-  </Card>
-</TabsContent>
-
-
-
-
-
-<TabsContent value="2">
-  <Card x-chunk="dashboard-05-chunk-3">
-    <CardHeader className="px-7">
-      <CardTitle>Class 2 Attendance</CardTitle>
-      <CardDescription>
-        Total Students: 306
-      </CardDescription>
-    </CardHeader>
-    <CardContent>
-
-      <DatePicker />
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Student Name</TableHead>
-            <TableHead className="hidden md:table-cell">UID Number</TableHead>
-            <TableHead className="hidden md:table-cell">Date</TableHead>
-            <TableHead className="hidden md:table-cell">Attendance Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {/* Class 1 Students Data */}
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Liam Johnson</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID123</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-23</TableCell>
-            <TableCell className="hidden md:table-cell">
-            <Badge className='bg-green-500'>Present</Badge>
-
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Olivia Smith</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID124</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-24</TableCell>
-            <TableCell className="hidden md:table-cell">
-            <Badge className='bg-green-500'>Present</Badge>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Noah Williams</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID125</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-25</TableCell>
-            <TableCell className="hidden md:table-cell">
-            <Badge className='bg-green-500'>Present</Badge>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Emma Brown</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID126</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-26</TableCell>
-            <TableCell className="hidden md:table-cell">
-            <Badge className='bg-green-500'>Present</Badge>
-              
-            </TableCell>
-          </TableRow>
-          {/* Duplicate entries for "Chris Johnson" can be cleaned up if needed */}
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Chris Johnson</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID127</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-27</TableCell>
-            <TableCell className="hidden md:table-cell">
-              <Badge variant="destructive">Absent</Badge>
-            </TableCell>
-          </TableRow>
-          {/* If you have multiple entries for Chris Johnson, you might want to make sure they represent different dates or statuses */}
-          {Array(6).fill().map((_, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <div className="font-medium">Chris Johnson</div>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">UID127</TableCell>
-              <TableCell className="hidden md:table-cell">2023-06-27</TableCell>
-              <TableCell className="hidden md:table-cell">
-                <Badge variant="destructive">Absent</Badge>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </CardContent>
-  </Card>
-</TabsContent>
-
-
-<TabsContent value="3">
-  <Card x-chunk="dashboard-05-chunk-3">
-    <CardHeader className="px-7">
-      <CardTitle>Class 3 Attendance</CardTitle>
-      <CardDescription>
-        Total Students: 306
-      </CardDescription>
-    </CardHeader>
-    <CardContent>
-
-      <DatePicker />
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Student Name</TableHead>
-            <TableHead className="hidden md:table-cell">UID Number</TableHead>
-            <TableHead className="hidden md:table-cell">Date</TableHead>
-            <TableHead className="hidden md:table-cell">Attendance Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {/* Class 1 Students Data */}
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Liam Johnson</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID123</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-23</TableCell>
-            <TableCell className="hidden md:table-cell">
-            <Badge className='bg-green-500'>Present</Badge>
-
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Olivia Smith</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID124</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-24</TableCell>
-            <TableCell className="hidden md:table-cell">
-            <Badge className='bg-green-500'>Present</Badge>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Noah Williams</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID125</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-25</TableCell>
-            <TableCell className="hidden md:table-cell">
-            <Badge className='bg-green-500'>Present</Badge>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Emma Brown</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID126</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-26</TableCell>
-            <TableCell className="hidden md:table-cell">
-            <Badge className='bg-green-500'>Present</Badge>
-              
-            </TableCell>
-          </TableRow>
-          {/* Duplicate entries for "Chris Johnson" can be cleaned up if needed */}
-          <TableRow>
-            <TableCell>
-              <div className="font-medium">Chris Johnson</div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">UID127</TableCell>
-            <TableCell className="hidden md:table-cell">2023-06-27</TableCell>
-            <TableCell className="hidden md:table-cell">
-              <Badge variant="destructive">Absent</Badge>
-            </TableCell>
-          </TableRow>
-          {/* If you have multiple entries for Chris Johnson, you might want to make sure they represent different dates or statuses */}
-          {Array(6).fill().map((_, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <div className="font-medium">Chris Johnson</div>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">UID127</TableCell>
-              <TableCell className="hidden md:table-cell">2023-06-27</TableCell>
-              <TableCell className="hidden md:table-cell">
-                <Badge variant="destructive">Absent</Badge>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </CardContent>
-  </Card>
-</TabsContent>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        {buses.map((bus) => (
+          <TabsContent key={bus.id} value={bus.id}>
+            <Card x-chunk="dashboard-05-chunk-3">
+              <CardHeader className="px-7">
+                <CardTitle>{bus.name} Attendance</CardTitle>
+                <CardDescription>
+                  Total Riders: {attendanceData ? attendanceData.total_riders : 0}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DatePicker date={date} setDate={setDate} />
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Rider Name</TableHead>
+                      
+                      <TableHead className="hidden md:table-cell">Date</TableHead>
+                      <TableHead className="hidden md:table-cell">Attendance Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {attendanceData && attendanceData.attendance.length > 0 ? (
+                      attendanceData.attendance.map((record, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <div className="font-medium">{record.student_name}</div>
+                          </TableCell>
+                         
+                          <TableCell className="hidden md:table-cell">{record.timestamp}</TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            <Badge className='bg-green-500'>{record.status}</Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan="4" className="text-center">
+                          No attendance records found for this date.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
     <div>
