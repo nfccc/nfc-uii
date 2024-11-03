@@ -217,13 +217,12 @@ const Management = () => {
         <div className="flex items-center">
           <TabsList>
           
-            <TabsTrigger value="1">Bus 1 </TabsTrigger>
-            <TabsTrigger value="2">Bus 2 </TabsTrigger>
-            <TabsTrigger value="3">Bus 3 </TabsTrigger>
-            <TabsTrigger value="4">Bus 4 </TabsTrigger>
-            <TabsTrigger value="5">Bus 5 </TabsTrigger>
-            <TabsTrigger value="6">Bus 6 </TabsTrigger>
-            <TabsTrigger value="7">Bus 7 </TabsTrigger>
+            <TabsTrigger value="1">P1 Bus</TabsTrigger>
+            <TabsTrigger value="2">Muthaiga Bus</TabsTrigger>
+            <TabsTrigger value="3">Lavington Bus</TabsTrigger>
+            <TabsTrigger value="4">SSD Bus</TabsTrigger>
+            <TabsTrigger value="5">Karen Bus</TabsTrigger>
+            
 
 
 

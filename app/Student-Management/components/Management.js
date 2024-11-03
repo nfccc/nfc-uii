@@ -521,7 +521,7 @@ const onSubmit = async (data) => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <DropdownMenuItem>Edits</DropdownMenuItem>
                       <DropdownMenuItem>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
