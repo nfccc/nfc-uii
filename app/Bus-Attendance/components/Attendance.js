@@ -226,7 +226,7 @@ const Management = () => {
   <Card x-chunk="dashboard-05-chunk-3">
     <CardHeader className="pb-2">
       <CardDescription>On-Time Performance Rate</CardDescription>
-      <CardTitle className="text-4xl">92%</CardTitle> {/* Replace with actual data */}
+      <CardTitle className="text-4xl">94%</CardTitle> {/* Replace with actual data */}
     </CardHeader>
     <CardContent>
       <div className="text-xs text-muted-foreground mb-2">
