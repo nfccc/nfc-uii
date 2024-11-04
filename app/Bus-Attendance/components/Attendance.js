@@ -230,7 +230,7 @@ const Management = () => {
     </CardHeader>
     <CardContent>
       <div className="text-xs text-muted-foreground mb-2">
-        +3% from last month
+        +3% from last month 
       </div>
       <Progress value={3} aria-label="3% increase" />
     </CardContent>
