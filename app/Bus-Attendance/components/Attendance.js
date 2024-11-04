@@ -132,6 +132,14 @@ const Management = () => {
   const [busId, setBusId] = useState(buses[0].bus_id) // Default bus ID (P1 Bus as default)
   const [attendanceData, setAttendanceData] = useState(null)
 
+
+  // Initial fetch for today's attendance when the component mounts
+  useEffect(() => {
+    const today = new Date()
+    const formattedDate = formatInTimeZone(today, timeZone, "yyyy-MM-dd")
+    fetchAttendance(formattedDate, busId)
+  }, []) // No dependencies, so this runs only on initial mount
+
   // Fetch attendance data when date or busId changes
   useEffect(() => {
     if (date && busId) {
@@ -149,6 +157,12 @@ const Management = () => {
     } catch (error) {
       console.error("Error fetching attendance data:", error)
     }
+  }
+
+  const handleBusChange = (newBusId) => {
+    setBusId(newBusId)
+    const today = new Date() // Set date to today’s date
+    setDate(today) // Update the date state to trigger the useEffect
   }
 
   
@@ -227,10 +241,14 @@ const Management = () => {
 
 
       {/* Tabs for selecting the bus */}
-      <Tabs defaultValue={buses[0].id} onValueChange={(value) => {
-        const selectedBus = buses.find(bus => bus.id === value)
-        if (selectedBus) setBusId(selectedBus.bus_id)
-      }}>
+      <Tabs defaultValue={buses[0].id}
+  onValueChange={(value) => {
+    const selectedBus = buses.find(bus => bus.id === value)
+    if (selectedBus) {
+      setBusId(selectedBus.bus_id)
+      setDate(new Date()) // Set date to today’s date when a bus is selected
+    }
+  }}>
         <div className="flex items-center">
           <TabsList>
             {buses.map((bus) => (
