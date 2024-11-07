@@ -13,7 +13,7 @@ export default function RootLayout({ children }) {
     <>
 <Navbar />
       
-<div className="ml-[220px] bg-muted/40">{children}</div>
+<div className="ml-[220px] ">{children}</div>
 
 <Sidebar />
       
@@ -21,3 +21,6 @@ export default function RootLayout({ children }) {
     </>
   );
 }
+
+
+// bg-muted/40

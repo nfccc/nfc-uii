@@ -95,43 +95,65 @@ import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, Marker, Polyline } from "@react-google-maps/api";
 
 const containerStyle = {
-  width: "600%",
+  width: "620%",
   height: "600px"
 };
 
-// Define the simulated route as an array of lat/lng coordinates
-const simulatedRoute = [
-  { lat: -1.286389, lng: 36.817223 }, // Start point (example in Nairobi)
-  { lat: -1.287, lng: 36.818 },
-  { lat: -1.288, lng: 36.819 },
-  { lat: -1.289, lng: 36.820 },
-  { lat: -1.290, lng: 36.821 },
-  { lat: -1.291, lng: 36.822 }, // End point
-  { lat: -1.300, lng: 36.840 }, // End point
-
+// Define simulated routes for four buses
+const busRoutes = [
+  [
+    { lat: -1.286389, lng: 36.817223 },
+    { lat: -1.287, lng: 36.818 },
+    { lat: -1.288, lng: 36.819 },
+    { lat: -1.289, lng: 36.820 }
+  ],
+  [
+    { lat: -1.290, lng: 36.821 },
+    { lat: -1.291, lng: 36.822 },
+    { lat: -1.292, lng: 36.823 },
+    { lat: -1.293, lng: 36.824 }
+  ],
+  [
+    { lat: -1.294, lng: 36.825 },
+    { lat: -1.295, lng: 36.826 },
+    { lat: -1.296, lng: 36.827 },
+    { lat: -1.297, lng: 36.828 }
+  ],
+  [
+    { lat: -1.298, lng: 36.829 },
+    { lat: -1.299, lng: 36.830 },
+    { lat: -1.300, lng: 36.831 },
+    { lat: -1.301, lng: 36.832 }
+  ]
 ];
 
 const BusTrackingPage = () => {
-  const googleMapsApiKey = 'AIzaSyBv8BOxralpTmLYQQLtlG3zE0klGFzgsL4';
+  const googleMapsApiKey = '';
 
-  const [busPosition, setBusPosition] = useState(simulatedRoute[0]);
-  const [path, setPath] = useState([simulatedRoute[0]]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [busPositions, setBusPositions] = useState(busRoutes.map(route => route[0]));
+  const [paths, setPaths] = useState(busRoutes.map(route => [route[0]]));
+  const [indices, setIndices] = useState(Array(busRoutes.length).fill(0));
 
   useEffect(() => {
-    // Update the bus position every 2 seconds
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => {
-        const nextIndex = prevIndex + 1;
-
-        if (nextIndex < simulatedRoute.length) {
-          setBusPosition(simulatedRoute[nextIndex]);
-          setPath((prevPath) => [...prevPath, simulatedRoute[nextIndex]]);
-          return nextIndex;
-        } else {
-          clearInterval(interval); // Stop the interval at the end of the route
-          return prevIndex;
-        }
+      setIndices((prevIndices) => {
+        return prevIndices.map((index, busIndex) => {
+          const nextIndex = index + 1;
+          if (nextIndex < busRoutes[busIndex].length) {
+            setBusPositions((prevPositions) => {
+              const newPositions = [...prevPositions];
+              newPositions[busIndex] = busRoutes[busIndex][nextIndex];
+              return newPositions;
+            });
+            setPaths((prevPaths) => {
+              const newPaths = [...prevPaths];
+              newPaths[busIndex] = [...newPaths[busIndex], busRoutes[busIndex][nextIndex]];
+              return newPaths;
+            });
+            return nextIndex;
+          }
+          return index;
+        });
       });
     }, 6000);
 
@@ -139,12 +161,31 @@ const BusTrackingPage = () => {
   }, []);
 
   return (
-    <div>
-      <h1>Live Bus Tracking (Simulated)</h1>
+    <div className="ml-6">
+      <header>
+        <h1 className="text-xs text-muted-foreground mb-2">Real-Time Bus Tracking Dashboard</h1>
+        
+      </header>
       <LoadScript googleMapsApiKey={googleMapsApiKey}>
-        <GoogleMap mapContainerStyle={containerStyle} center={busPosition} zoom={15}>
-          <Marker position={busPosition} />
-          <Polyline path={path} options={{ strokeColor: "#FF0000", strokeOpacity: 0.8, strokeWeight: 2 }} />
+        <GoogleMap
+          mapContainerStyle={containerStyle}
+          center={busPositions[0] || { lat: -1.286389, lng: 36.817223 }}
+          zoom={14}
+        >
+          {busPositions.map((position, idx) => (
+            <Marker key={idx} position={position} label={`Bus ${idx + 1}`} />
+          ))}
+          {paths.map((path, idx) => (
+            <Polyline
+              key={idx}
+              path={path}
+              options={{
+                strokeColor: ["#FF0000", "#00FF00", "#0000FF", "#FF00FF"][idx],
+                strokeOpacity: 0.8,
+                strokeWeight: 2
+              }}
+            />
+          ))}
         </GoogleMap>
       </LoadScript>
     </div>
