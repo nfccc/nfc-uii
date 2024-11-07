@@ -93,9 +93,29 @@
 
 import React, { useState, useEffect } from "react";
 import { GoogleMap, LoadScript, Marker, Polyline } from "@react-google-maps/api";
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
+
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 const containerStyle = {
-  width: "620%",
+  width: "120%",
   height: "600px"
 };
 
@@ -188,6 +208,78 @@ const BusTrackingPage = () => {
           ))}
         </GoogleMap>
       </LoadScript>
+        
+
+    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+
+
+
+      
+{/* Total Attendance This Month Card */}
+<Card className="sm:col-span-2" x-chunk="dashboard-05-chunk-0">
+  <CardHeader className="pb-3">
+    <CardTitle>Total Attendance This Month</CardTitle>
+    <CardDescription className="max-w-lg text-balance leading-relaxed">
+      The total number of attendance recorded for this month.
+    </CardDescription>
+  </CardHeader>
+  <CardContent>
+    <div className="text-4xl font-bold">3,200</div> {/* Replace with actual data */}
+  </CardContent>
+  <CardFooter>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>View Attendance Report</Button>
+      </DialogTrigger>
+    </Dialog>
+  </CardFooter>
+</Card>
+
+{/* Average Attendance Rate Card */}
+<Card x-chunk="dashboard-05-chunk-1">
+  <CardHeader className="pb-2">
+    <CardDescription>Average Attendance Rate</CardDescription>
+    <CardTitle className="text-4xl">85%</CardTitle> {/* Replace with actual data */}
+  </CardHeader>
+  <CardContent>
+    <div className="text-xs text-muted-foreground mb-2">
+      +2% from last month
+    </div>
+    <Progress value={2} aria-label="2% increase" />
+  </CardContent>
+  <CardFooter />
+</Card>
+
+{/* Absent Students This Week Card */}
+<Card x-chunk="dashboard-05-chunk-2">
+  <CardHeader className="pb-2">
+    <CardDescription>Absent Students This Week</CardDescription>
+    <CardTitle className="text-4xl">30</CardTitle> {/* Replace with actual data */}
+  </CardHeader>
+  <CardContent>
+    <div className="text-xs text-muted-foreground mb-2">
+      -10% from last week
+    </div>
+    <Progress value={-10} aria-label="10% decrease" />
+  </CardContent>
+  <CardFooter />
+</Card>
+
+{/* Students with Perfect Attendance Card */}
+<Card x-chunk="dashboard-05-chunk-3">
+  <CardHeader className="pb-2">
+    <CardDescription>Students with Perfect Attendance</CardDescription>
+    <CardTitle className="text-4xl">12</CardTitle> {/* Replace with actual data */}
+  </CardHeader>
+  <CardContent>
+    <div className="text-xs text-muted-foreground mb-2">
+      +3 from last month
+    </div>
+    <Progress value={3} aria-label="3% increase" />
+  </CardContent>
+  <CardFooter />
+</Card>
+</div>
     </div>
   );
 };
