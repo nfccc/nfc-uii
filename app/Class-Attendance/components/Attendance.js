@@ -141,10 +141,22 @@ const Management = () => {
   }
   return (
     <div className='mt-10'>  
+     <h1 className="flex items-center justify-center  text-4xl font-bold text-gray-800 mb-20">
+      COMING SOON
+    </h1>
+
       
       <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+     
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+
+  
+
     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+
+
+
+      
   {/* Total Attendance This Month Card */}
   <Card className="sm:col-span-2" x-chunk="dashboard-05-chunk-0">
     <CardHeader className="pb-3">
@@ -359,18 +371,7 @@ const Management = () => {
             </TableCell>
           </TableRow>
           {/* If you have multiple entries for Chris Johnson, you might want to make sure they represent different dates or statuses */}
-          {Array(6).fill().map((_, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <div className="font-medium">Chris Johnson</div>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">UID127</TableCell>
-              <TableCell className="hidden md:table-cell">2023-06-27</TableCell>
-              <TableCell className="hidden md:table-cell">
-                <Badge variant="destructive">Absent</Badge>
-              </TableCell>
-            </TableRow>
-          ))}
+
         </TableBody>
       </Table>
     </CardContent>
