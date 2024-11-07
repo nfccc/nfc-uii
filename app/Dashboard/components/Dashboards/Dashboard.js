@@ -89,57 +89,66 @@
 // );
 
 // export default Dashboard;
+'use client'
 
+import React, { useState, useEffect } from "react";
+import { GoogleMap, LoadScript, Marker, Polyline } from "@react-google-maps/api";
 
-"use client";
+const containerStyle = {
+  width: "600%",
+  height: "600px"
+};
 
-import React, { useEffect } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+// Define the simulated route as an array of lat/lng coordinates
+const simulatedRoute = [
+  { lat: -1.286389, lng: 36.817223 }, // Start point (example in Nairobi)
+  { lat: -1.287, lng: 36.818 },
+  { lat: -1.288, lng: 36.819 },
+  { lat: -1.289, lng: 36.820 },
+  { lat: -1.290, lng: 36.821 },
+  { lat: -1.291, lng: 36.822 }, // End point
+  { lat: -1.300, lng: 36.840 }, // End point
 
-// Set your Mapbox access token here
-mapboxgl.accessToken = 'pk.eyJ1IjoibmZjNzg4IiwiYSI6ImNtMzZnOGc3eDA0cHoydnIzNGJoNDZkNW0ifQ.g7koXAKFr69MB-USGTXr8g';
-
-const busLocations = [
-  { id: 'p1BusMap', name: 'P1 Bus', coordinates: [36.8219, -1.2921] }, // Example: Nairobi
-  { id: 'muthaigaBusMap', name: 'Muthaiga Bus', coordinates: [36.8172, -1.2877] }, // Example: Muthaiga
-  { id: 'lavingtonBusMap', name: 'Lavington Bus', coordinates: [36.7732, -1.2664] }, // Example: Lavington
-  { id: 'ssdBusMap', name: 'SSD Bus', coordinates: [36.7266, -1.2607] }, // Example: SSD area
-  { id: 'karenBusMap', name: 'Karen Bus', coordinates: [36.7192, -1.3032] }, // Example: Karen
 ];
 
-const App = () => {
-  useEffect(() => {
-    // Initialize maps for each bus location
-    busLocations.forEach((bus) => {
-      const map = new mapboxgl.Map({
-        container: bus.id, // Container ID
-        style: 'mapbox://styles/mapbox/streets-v11', // Map style
-        center: bus.coordinates, // Coordinates for each bus location
-        zoom: 11,
-      });
+const BusTrackingPage = () => {
+  const googleMapsApiKey = 'AIzaSyBv8BOxralpTmLYQQLtlG3zE0klGFzgsL4';
 
-      // Add a marker at each bus location
-      new mapboxgl.Marker()
-        .setLngLat(bus.coordinates)
-        .setPopup(new mapboxgl.Popup().setText(bus.name)) // Popup with bus name
-        .addTo(map);
-    });
+  const [busPosition, setBusPosition] = useState(simulatedRoute[0]);
+  const [path, setPath] = useState([simulatedRoute[0]]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    // Update the bus position every 2 seconds
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => {
+        const nextIndex = prevIndex + 1;
+
+        if (nextIndex < simulatedRoute.length) {
+          setBusPosition(simulatedRoute[nextIndex]);
+          setPath((prevPath) => [...prevPath, simulatedRoute[nextIndex]]);
+          return nextIndex;
+        } else {
+          clearInterval(interval); // Stop the interval at the end of the route
+          return prevIndex;
+        }
+      });
+    }, 6000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className='ml-6'>
-      
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-        {busLocations.map((bus) => (
-          <div key={bus.id} style={{ width: '200px', height: '200px', border: '1px solid #ccc', borderRadius: '8px', padding: '5px' }}>
-            <h4 style={{ margin: '5px 0', textAlign: 'center' }}>{bus.name}</h4>
-            <div id={bus.id} style={{ width: '100%', height: '100%' }}></div>
-          </div>
-        ))}
-      </div>
+    <div>
+      <h1>Live Bus Tracking (Simulated)</h1>
+      <LoadScript googleMapsApiKey={googleMapsApiKey}>
+        <GoogleMap mapContainerStyle={containerStyle} center={busPosition} zoom={15}>
+          <Marker position={busPosition} />
+          <Polyline path={path} options={{ strokeColor: "#FF0000", strokeOpacity: 0.8, strokeWeight: 2 }} />
+        </GoogleMap>
+      </LoadScript>
     </div>
   );
 };
 
-export default App;
+export default BusTrackingPage;
