@@ -1,6 +1,8 @@
 'use client'
 // import { Badge } from "@/components/ui/badge";
-import React from 'react'
+import React, { useState, useEffect } from "react"
+import { formatInTimeZone } from "date-fns-tz"
+
 import Image from "next/image"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
@@ -107,217 +109,194 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { DatePicker } from '@/app/Class-Attendance/components/DatePicker'
-
-// import {  ChevronRight, Copy, CreditCard, File, Home, LineChart, ListFilter, MoreVertical, Package, Package2, PanelLeft, Search, Settings, ShoppingCart, Sidebar, Truck, Users2 } from "lucide-react";
+import { DatePicker } from './DatePicker'
 
 
-// Define schema for form validation using zod
-const FormSchema = z.object({
-  studentName: z.string().min(1, "Student name is required"),
-  uidNumber: z.string().min(1, "UID number is required"),
-  parentContact: z.string().min(10, "Parent contact must be at least 10 characters"),
-  parentEmail: z.string().email("Please enter a valid email"),
-  class: z.string().min(1, "Class is required"),
-})
 
-const mockParentData = [
-  { id: 1, studentName: 'Liam Johnson', parentNumber: '+1234567890', email: 'parent1@example.com', status: 'Delivered' },
-  { id: 2, studentName: 'Olivia Smith', parentNumber: '+1234567891', email: 'parent2@example.com', status: 'Failed' },
-  { id: 3, studentName: 'Noah Williams', parentNumber: '+1234567892', email: 'parent3@example.com', status: 'Delivered' },
-  { id: 3, studentName: 'Noah Williams', parentNumber: '+1234567892', email: 'parent3@example.com', status: 'Delivered' },
-  { id: 3, studentName: 'Noah Williams', parentNumber: '+1234567892', email: 'parent3@example.com', status: 'Delivered' },
-  { id: 3, studentName: 'Noah Williams', parentNumber: '+1234567892', email: 'parent3@example.com', status: 'Delivered' },
-  { id: 3, studentName: 'Noah Williams', parentNumber: '+1234567892', email: 'parent3@example.com', status: 'Delivered' },
-
-  { id: 4, studentName: 'Emma Brown', parentNumber: '+1234567893', email: 'parent4@example.com', status: 'Failed' },
-  { id: 5, studentName: 'Sophia Johnson', parentNumber: '+1234567894', email: 'parent5@example.com', status: 'Delivered' },
-  { id: 6, studentName: 'James Taylor', parentNumber: '+1234567895', email: 'parent6@example.com', status: 'Delivered' },
-]
 
   
 
 const ParentCommunication = () => {
-  const form = useForm({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
-      studentName: "",
-      uidNumber: "",
-      parentContact: "",
-      parentEmail: "",
-      class: "",
-    },
-  })
+  const timeZone = "Africa/Nairobi"
 
-  function onSubmit(data) {
-    console.log(data) // Handle form submission
+  
+  const buses = [
+    { id: "1", bus_id: "PB", name: "P1 Bus" },
+    { id: "2", bus_id: "MB", name: "Muthaiga Bus" },
+    { id: "3", bus_id: "LB", name: "Lavington Bus" },
+    { id: "4", bus_id: "SB", name: "SSD Bus" },
+    { id: "5", bus_id: "KB", name: "Karen Bus" },
+  ]
+
+  const [date, setDate] = useState(null) // State to hold the selected date
+  const [busId, setBusId] = useState(buses[0].bus_id) // Default bus ID (P1 Bus as default)
+  const [attendanceData, setAttendanceData] = useState(null)
+
+
+  // Initial fetch for today's attendance when the component mounts
+  useEffect(() => {
+    const today = new Date()
+    const formattedDate = formatInTimeZone(today, timeZone, "yyyy-MM-dd")
+    fetchAttendance(formattedDate, busId)
+  }, []) // No dependencies, so this runs only on initial mount
+
+  // Fetch attendance data when date or busId changes
+  useEffect(() => {
+    if (date && busId) {
+      // Format date in Nairobi time zone to avoid shifts
+      const formattedDate = formatInTimeZone(date, timeZone, "yyyy-MM-dd")
+      fetchAttendance(formattedDate, busId)
+    }
+  }, [date, busId])
+
+  const fetchAttendance = async (formattedDate, selectedBusId) => {
+    try {
+      const response = await fetch(`https://nfc-3fdg.onrender.com/bus/bus-attendance/${selectedBusId}/?date=${formattedDate}`)
+      const data = await response.json()
+      setAttendanceData(data)
+    } catch (error) {
+      console.error("Error fetching attendance data:", error)
+    }
   }
+
+  const handleBusChange = (newBusId) => {
+    setBusId(newBusId)
+    const today = new Date() // Set date to today’s date
+    setDate(today) // Update the date state to trigger the useEffect
+  }
+
+  
   return (
     <div className='mt-10'>  
       
       <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-  {/* Total Parents Notified This Month Card */}
-  <Card className="sm:col-span-2" x-chunk="parent-communication-01-chunk-0">
-    <CardHeader className="pb-3">
-      <CardTitle>Total Parents Notified This Month</CardTitle>
-      <CardDescription className="max-w-lg text-balance leading-relaxed">
-        The total number of parents notified via the system this month.
-      </CardDescription>
-    </CardHeader>
-    <CardContent>
-      <div className="text-4xl font-bold">1,200</div> {/* Replace with actual data */}
-    </CardContent>
-    <CardFooter>
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button>View Notification Report</Button>
-        </DialogTrigger>
-      </Dialog>
-    </CardFooter>
-  </Card>
+  {/* Total Bus Rides This Month Card */}
 
-  {/* Average Notifications Sent per Day Card */}
-  <Card x-chunk="parent-communication-01-chunk-1">
-    <CardHeader className="pb-2">
-      <CardDescription>Average Notifications Sent per Day</CardDescription>
-      <CardTitle className="text-4xl">60</CardTitle> {/* Replace with actual data */}
-    </CardHeader>
-    <CardContent>
-      <div className="text-xs text-muted-foreground mb-2">
-        +15% from last month
-      </div>
-      <Progress value={15} aria-label="15% increase" />
-    </CardContent>
-    <CardFooter />
-  </Card>
-
-  {/* Unread Notifications This Week Card */}
-  <Card x-chunk="parent-communication-01-chunk-2">
-    <CardHeader className="pb-2">
-      <CardDescription>Unread Notifications This Week</CardDescription>
-      <CardTitle className="text-4xl">10</CardTitle> {/* Replace with actual data */}
-    </CardHeader>
-    <CardContent>
-      <div className="text-xs text-muted-foreground mb-2">
-        -5% from last week
-      </div>
-      <Progress value={-5} aria-label="5% decrease" />
-    </CardContent>
-    <CardFooter />
-  </Card>
-
-  {/* Response Rate to Notifications Card */}
-  <Card x-chunk="parent-communication-01-chunk-3">
-    <CardHeader className="pb-2">
-      <CardDescription>Response Rate to Notifications</CardDescription>
-      <CardTitle className="text-4xl">85%</CardTitle> {/* Replace with actual data */}
-    </CardHeader>
-    <CardContent>
-      <div className="text-xs text-muted-foreground mb-2">
-        +10% from last month
-      </div>
-      <Progress value={10} aria-label="10% increase" />
-    </CardContent>
-    <CardFooter />
-  </Card>
 </div>
 
-          <div className="mt-6">
-            <Tabs defaultValue="1">
-              <div className="flex items-center">
-                <TabsList>
-                  <TabsTrigger value="1">Class 1</TabsTrigger>
-                  <TabsTrigger value="2">Class 2</TabsTrigger>
-                  <TabsTrigger value="3">Class 3</TabsTrigger>
-                  <TabsTrigger value="4">Class 4</TabsTrigger>
-                  <TabsTrigger value="5">Class 5</TabsTrigger>
-                  <TabsTrigger value="6">Class 6</TabsTrigger>
-                  <TabsTrigger value="7">Class 7</TabsTrigger>
-                </TabsList>
-                <div className="ml-auto flex items-center gap-2">
-                  <div className="relative ml-auto flex-1 md:grow-0">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="search"
-                      placeholder="Search..."
-                      className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-                    />
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-7 gap-1 text-sm">
-                        <ListFilter className="h-3.5 w-3.5" />
-                        <span className="sr-only sm:not-sr-only">Filter</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuCheckboxItem checked>
-                        Delivered
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuCheckboxItem>
-                        Failed
-                      </DropdownMenuCheckboxItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button size="sm" variant="outline" className="h-7 gap-1 text-sm">
-                    <File className="h-3.5 w-3.5" />
-                    <span className="sr-only sm:not-sr-only">Export</span>
-                  </Button>
-                </div>
-              </div>
 
-              {/* Tabs Content for each class */}
-              <TabsContent value="1">
-                <Card>
-                  <CardHeader className="px-7">
-                    <CardTitle>Class 1 Parent Communication</CardTitle>
-                    <CardDescription>Total Students: 30</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <DatePicker />
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Student Name</TableHead>
-                          <TableHead>Parent Contact Number</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {mockParentData.map((parent) => (
-                          <TableRow key={parent.id}>
-                            <TableCell>
-                              <div className="font-medium">{parent.studentName}</div>
-                            </TableCell>
-                            <TableCell>{parent.parentNumber}</TableCell>
-                            <TableCell>{parent.email}</TableCell>
-                            <TableCell>
-                              <Badge
-                                className={`${
-                                  parent.status === 'Delivered' ? 'bg-green-500' : 'bg-red-500'
-                                } w-20 text-center`}
-                              >
-                                {parent.status}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+
+      {/* Tabs for selecting the bus */}
+      <Tabs defaultValue={buses[0].id}
+  onValueChange={(value) => {
+    const selectedBus = buses.find(bus => bus.id === value)
+    if (selectedBus) {
+      setBusId(selectedBus.bus_id)
+      setDate(new Date()) // Set date to today’s date when a bus is selected
+    }
+  }}>
+        <div className="flex items-center">
+          <TabsList>
+            {buses.map((bus) => (
+              <TabsTrigger key={bus.id} value={bus.id}>
+                {bus.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          
+          {/* Search and Filter Options */}
+          <div className="ml-auto flex items-center gap-2">
+            <div className="relative ml-auto flex-1 md:grow-0">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search..."
+                className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
+              />
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-sm"
+                >
+                  <ListFilter className="h-3.5 w-3.5" />
+                  <span className="sr-only sm:not-sr-only">Filter</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem checked>
+                  Fulfilled
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem>
+                  Declined
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem>
+                  Refunded
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1 text-sm"
+            >
+              <File className="h-3.5 w-3.5" />
+              <span className="sr-only sm:not-sr-only">Export</span>
+            </Button>
           </div>
         </div>
-      </main>
-    </div>
-  );
-};
 
-export default ParentCommunication;
+        {buses.map((bus) => (
+          <TabsContent key={bus.id} value={bus.id}>
+            <Card x-chunk="dashboard-05-chunk-3">
+              <CardHeader className="px-7">
+                <CardTitle>{bus.name} Parent Communication</CardTitle>
+                <CardDescription>
+                  Total Riders: {attendanceData ? attendanceData.total_riders : 0}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DatePicker date={date} setDate={setDate} />
+                <Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Student Name</TableHead>
+      <TableHead>Parent Email</TableHead>
+      <TableHead className="hidden md:table-cell">Date</TableHead>
+      <TableHead className="hidden md:table-cell">Status</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    {attendanceData && attendanceData.attendance.length > 0 ? (
+      attendanceData.attendance.map((record, index) => (
+        <TableRow key={index}>
+          <TableCell>
+            <div className="font-medium">{record.student_name}</div>
+          </TableCell>
+          <TableCell className="hidden md:table-cell">{record.parent_email}</TableCell>
+          <TableCell className="hidden md:table-cell">{record.timestamp}</TableCell>
+          <TableCell className="hidden md:table-cell">
+            <Badge className='bg-green-500'>{record.status}</Badge>
+          </TableCell>
+        </TableRow>
+      ))
+    ) : (
+      <TableRow>
+        <TableCell colSpan="4" className="text-center">
+          No attendance records found for this date.
+        </TableCell>
+      </TableRow>
+    )}
+  </TableBody>
+</Table>
+
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ))}
+      </Tabs>
+    </div>
+    <div>
+    
+    </div>
+  </main></div>
+  )
+}
+
+export default ParentCommunication
