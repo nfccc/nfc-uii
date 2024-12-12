@@ -417,7 +417,7 @@ const Management = () => {
         [selectedBusId]: data,
       }));
     } catch (error) {
-      console.error("Error fetching attendance data:", error);
+      console.error("Error fetching attendancee data:", error);
     }
   };
 
